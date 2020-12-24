@@ -5,6 +5,9 @@
  */
 public class FibonacciHeap
 {
+	private HeapNode min;
+	private HeapNode first;
+	private int size;
 
    /**
     * public boolean isEmpty()
@@ -170,7 +173,14 @@ public class FibonacciHeap
     */
     public class HeapNode{
 
-	public int key;
+    	private int key;
+    	private int rank;
+    	private boolean mark;
+    	private HeapNode child;
+    	private HeapNode next;
+    	private HeapNode prev;
+    	private HeapNode parent;
+
 
   	public HeapNode(int key) {
 	    this.key = key;
