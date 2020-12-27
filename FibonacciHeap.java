@@ -1,3 +1,6 @@
+import javax.sound.midi.Synthesizer;
+import java.awt.*;
+
 /**
  * FibonacciHeap
  *
@@ -163,6 +166,51 @@ public class FibonacciHeap
         return arr; // should be replaced by student code
     }
 
+    /**
+     * Cut x from its parent y
+     */
+    public void cut(HeapNode x, HeapNode y) {
+        // remove parent and clean key
+        x.setParent(null);
+        x.unMark();
+        // reduce y rank
+        y.decreaseRank();
+        if (x.getNext() == x) { // node doesn't have siblings
+            y.setChild(null);
+        } else {
+            y.setChild(x.getNext());
+            x.getPrev().setNext(x.getNext());
+            x.getNext().setPrev(x.getPrev());
+        }
+
+        // Adding this subtree at the end of the list
+        // TODO: Might be better to just meld when we write it, but need to make sure size etc. remains same
+        this.first.getPrev().setNext(x); // put list as next of last element
+        x.setPrev(this.first.getPrev()); // setting x prev to be the former last
+        x.setNext(this.first); // setting x next to be the first element
+        this.first.setPrev(x); // setting the prev element of the first to be x
+
+        // Checking if x should be minimum pointer
+        // TODO: Should also consider it in meld
+        if (x.getKey() < this.min.getKey()) {
+            this.min = x;
+        }
+    }
+
+    /**
+     * Perform a cascading-cut process starting at x
+     */
+    public void cascadingCut(HeapNode x, HeapNode y){
+        cut(x,y);
+        if (y.getParent()!=null){
+            if (!y.isMarked()) {
+                y.setMark(true);
+            } else {
+                cascadingCut(y, y.getParent());
+            }
+        }
+    }
+
    /**
     * public class HeapNode
     *
@@ -171,24 +219,77 @@ public class FibonacciHeap
     * another file
     *
     */
-    public class HeapNode{
+   public class HeapNode {
 
-    	private int key;
-    	private int rank;
-    	private boolean mark;
-    	private HeapNode child;
-    	private HeapNode next;
-    	private HeapNode prev;
-    	private HeapNode parent;
+       private int key;
+       private int rank;
+       private boolean mark;
+       private HeapNode child;
+       private HeapNode next;
+       private HeapNode prev;
+
+       private HeapNode parent;
 
 
-  	public HeapNode(int key) {
-	    this.key = key;
-      }
+       public HeapNode(int key) {
+           this.key = key;
+           this.mark = false;
+       }
 
-  	public int getKey() {
-	    return this.key;
-      }
+       public int getKey() {
+           return this.key;
+       }
 
-    }
+       public void setMark(boolean m) {
+           this.mark = m;
+       }
+
+       /**
+        * Unmark a node
+        */
+       public void unMark(){
+           this.mark = false;
+       }
+
+       /**
+        * Returns mark
+        */
+       public boolean isMarked() {
+           return this.mark;
+       }
+
+       public HeapNode getParent() {
+           return parent;
+       }
+
+       public void setParent(HeapNode p) {
+           this.parent = p;
+       }
+
+       public void decreaseRank() {
+           this.rank--;
+       }
+
+       public HeapNode getNext() {
+           return this.next;
+       }
+
+       public HeapNode getPrev() {
+           return this.prev;
+       }
+
+       public void setNext(HeapNode next) {
+           this.next = next;
+       }
+
+       public void setPrev(HeapNode prev) {
+           this.prev = prev;
+       }
+
+       public void setChild(HeapNode c) {
+           this.child = c;
+       }
+
+
+   }
 }
