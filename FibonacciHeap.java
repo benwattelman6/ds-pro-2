@@ -12,7 +12,11 @@ public class FibonacciHeap
 	private HeapNode first;
 	private int size;
 	private int marked;
-
+	private static int links;
+	private static int cuts;
+	
+	public static final double goldenRatio = (Math.sqrt(5.0)+1)/2; 
+	
 	public FibonacciHeap () {
 		this.min = null;
 		this.first = null;
@@ -90,10 +94,36 @@ public class FibonacciHeap
     * Delete the node containing the minimum key.
     *
     */
+    //TODO - we need successive linking
     public void deleteMin()
     {
-     	return; // should be replaced by student code
-
+    	HeapNode x = this.min;
+    	x.getPrev().setNext(x.getNext());
+    	x.getNext().setPrev(x.getPrev());
+    	
+    	consolidate(x);
+    	
+    	
+    	
+    	this.size-- ;
+    }
+    
+    public void link (HeapNode x, HeapNode y) {
+    	//TODO - not sure if pointer updates are all correct
+    	if (x == null || y == null)
+    		return;
+    	HeapNode xc = x.getChild();
+    	HeapNode yc = y.getChild();
+    	x.setChild(y);
+    	y.setNext(xc);
+    	y.getPrev().setNext(x);
+    	x.setPrev(y.getPrev());
+    	
+    	links++; //static field
+    }
+    
+    public void consolidate (HeapNode x) {
+    	
     }
 
    /**
@@ -104,7 +134,7 @@ public class FibonacciHeap
     */
     public HeapNode findMin()
     {
-    	return new HeapNode(0);// should be replaced by student code
+    	return this.min;
     }
 
    /**
@@ -151,6 +181,7 @@ public class FibonacciHeap
     * Return a counters array, where the value of the i-th entry is the number of trees of order i in the heap.
     *
     */
+    //TODO
     public int[] countersRep()
     {
 	int[] arr = new int[42];
@@ -165,18 +196,27 @@ public class FibonacciHeap
     */
     public void delete(HeapNode x)
     {
-    	return; // should be replaced by student code
+    	decreaseKey(x,Integer.MAX_VALUE);
+    	deleteMin();
     }
 
    /**
     * public void decreaseKey(HeapNode x, int delta)
     *
     * The function decreases the key of the node x by delta. The structure of the heap should be updated
-    * to reflect this chage (for example, the cascading cuts procedure should be applied if needed).
+    * to reflect this change (for example, the cascading cuts procedure should be applied if needed).
     */
     public void decreaseKey(HeapNode x, int delta)
     {
-    	return; // should be replaced by student code
+    	x.setKey(x.getKey() - delta);
+    	if (x.getParent() != null) {
+    		HeapNode parent = x.getParent();
+    		if (x.getKey() > parent.getKey()) //everything OK
+    			return;
+    		else { //x.getKey() < parent.getKey()
+    			cascadingCut(x, parent);
+    		}
+    	}
     }
 
    /**
@@ -201,7 +241,7 @@ public class FibonacciHeap
     */
     public static int totalLinks()
     {
-    	return 0; // should be replaced by student code
+    	return links;
     }
 
    /**
@@ -212,7 +252,7 @@ public class FibonacciHeap
     */
     public static int totalCuts()
     {
-    	return 0; // should be replaced by student code
+    	return cuts;
     }
 
      /**
@@ -222,6 +262,7 @@ public class FibonacciHeap
     * The function should run in O(k*deg(H)).
     * You are not allowed to change H.
     */
+    //TODO
     public static int[] kMin(FibonacciHeap H, int k)
     {
         int[] arr = new int[42];
@@ -244,19 +285,25 @@ public class FibonacciHeap
             x.getPrev().setNext(x.getNext());
             x.getNext().setPrev(x.getPrev());
         }
-
-        // Adding this subtree at the end of the list
+        
+        
+        // Adding this subtree at the start of the list
         // TODO: Might be better to just meld when we write it, but need to make sure size etc. remains same
-        this.first.getPrev().setNext(x); // put list as next of last element
-        x.setPrev(this.first.getPrev()); // setting x prev to be the former last
-        x.setNext(this.first); // setting x next to be the first element
-        this.first.setPrev(x); // setting the prev element of the first to be x
+       HeapNode first = this.first;
+       HeapNode last = this.first.getPrev();
+       this.first = x; //set x as the first tree in heap
+       last.setNext(x); //set last item's 'next' to x
+       first.setPrev(x); //set previous first item's 'prev' to x
+       x.setNext(first); //set x's 'next' to previous first
+       x.setPrev(last); //set x's 'prev' to last item
 
         // Checking if x should be minimum pointer
         // TODO: Should also consider it in meld
         if (x.getKey() < this.min.getKey()) {
             this.min = x;
         }
+        
+        cuts++; //static field, so no use of 'this'
     }
 
     /**
