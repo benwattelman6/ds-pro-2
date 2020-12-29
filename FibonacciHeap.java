@@ -94,37 +94,128 @@ public class FibonacciHeap
     * Delete the node containing the minimum key.
     *
     */
-    //TODO - we need successive linking
     public void deleteMin()
     {
     	HeapNode x = this.min;
-    	x.getPrev().setNext(x.getNext());
-    	x.getNext().setPrev(x.getPrev());
-    	
-    	consolidate(x);
-    	
-    	
+    	//attach x's children to linked list of roots
+    	x.getPrev().setNext(x.getChild());
+    	x.getChild().getPrev().setNext(x.getNext());
+    	x.getChild().setParent(null);
+    	if (this.first == x)
+    		this.first = x.getChild();
     	
     	this.size-- ;
+
+    	this.first = consolidate(this.first);
+    	
     }
+    /*
+     * links x to y (x being the parent) and returns x
+     */
+    public HeapNode link (HeapNode x, HeapNode y) {
+    	if (x == null && y == null)
+    		return null;
+    	else if (y == null)
+    		return x;
+    	else if (x == null)
+    		return y;
     
-    public void link (HeapNode x, HeapNode y) {
-    	//TODO - not sure if pointer updates are all correct
-    	if (x == null || y == null)
-    		return;
+    	if (x.getKey() > y.getKey()) { //x must have the smaller key to remain the root
+    		HeapNode temp = x;
+    		x = y;
+    		y = temp;
+    	}
+    	
     	HeapNode xc = x.getChild();
-    	HeapNode yc = y.getChild();
+    	if (xc != null) {
+	    	y.setNext(xc);
+	    	y.setPrev(xc.getPrev());
+	    	xc.getPrev().setNext(y);
+	    	xc.setPrev(y);
+    	}
+    	y.setParent(x);    	
     	x.setChild(y);
-    	y.setNext(xc);
-    	y.getPrev().setNext(x);
-    	x.setPrev(y.getPrev());
+    	x.setRank(x.getRank()+1);
     	
     	links++; //static field
+    	
+    	return x;
     }
     
-    public void consolidate (HeapNode x) {
+    public HeapNode consolidate (HeapNode x) {
+    	HeapNode[] fullBuckets = toBuckets(x);
     	
+    	HeapNode node = null;
+    	for (int i=0; i<fullBuckets.length; i++) {
+    		if (fullBuckets[i] != null) { //there's a Binomial tree with rank i
+    			if (node == null) { //reached the first Binomial tree in list
+    				node = fullBuckets[i];
+    				node.setNext(node);
+    				node.setPrev(node);
+    				this.first = node;
+    			}
+    			else { //not the first Binomial tree in list
+    				insertAfter(node,fullBuckets[i]);
+    				//make sure node holds the new minimum
+    				if (fullBuckets[i].getKey()<node.getKey())
+    					node = fullBuckets[i];
+    				
+    			}
+    		}
+    	}
+    	
+    	return node;
     }
+    
+    /*
+     * helper function - insert root y as root x's 'next'
+     * only called from 'consolidate'
+     * y is the now the last root of the list
+     */
+    public void insertAfter (HeapNode x , HeapNode y) {
+    	x.getNext().setPrev(y);
+    	y.setNext(x.getNext());
+    	x.setNext(y);
+    	y.setPrev(x);
+    }
+    
+    
+    public HeapNode[] toBuckets(HeapNode x) {
+    	//initialize array - all cells are null
+    	HeapNode[] buckets = new HeapNode[CalcMaxRank()];
+    	
+    	x.getPrev().setNext(null);
+    	HeapNode y;
+    	while (x != null) {
+    		y = x;
+    		x = x.getNext();
+    		while(buckets[y.getRank()] != null) {
+    			y = link(y , buckets[y.getRank()]);
+    			buckets[y.getRank() - 1] = null;
+    		}
+    		buckets[y.getRank()] = y;
+    	}
+    	
+    	return buckets;
+    }
+    
+    
+    /*
+     * helper function - calculate log of num with base 2
+     */
+    public static int log2 (int num) {
+    	int res = (int)(Math.log(num) / Math.log(2.0));
+    	return res;
+    }
+    
+    /*
+     * helper functions - creates a HeapNode array sized ~ log_golden ratio(n) 
+     */
+    public  int CalcMaxRank () {
+    	int n = this.size;
+    	int len = (int) Math.ceil(log2(n)*1.4404);
+    	return len;
+    	}
 
    /**
     * public HeapNode findMin()
@@ -181,11 +272,25 @@ public class FibonacciHeap
     * Return a counters array, where the value of the i-th entry is the number of trees of order i in the heap.
     *
     */
-    //TODO
     public int[] countersRep()
     {
-	int[] arr = new int[42];
-        return arr; //	 to be replaced by student code
+    	int[] arr = new int[CalcMaxRank()]; //all cells are 0
+    	
+    	HeapNode x = this.first;
+    	if (x != null ) {
+        	x.getPrev().setNext(null); //need to fix this at the end
+        	int rank;
+        	
+        	while (x != null) {
+        		rank = x.getRank();
+        		arr[rank]++;
+        		x = x.getNext();
+        	}
+        	//fix what we changed at the beginning
+        	this.first.getPrev().setNext(this.first);
+    	}
+
+        return arr;
     }
 
    /**
@@ -276,6 +381,7 @@ public class FibonacciHeap
         // remove parent and clean key
         x.setParent(null);
         x.unMark();
+        this.marked--;
         // reduce y rank
         y.decreaseRank();
         if (x.getNext() == x) { // node doesn't have siblings
@@ -314,6 +420,7 @@ public class FibonacciHeap
         if (y.getParent()!=null){
             if (!y.isMarked()) {
                 y.setMark(true);
+                this.marked++;
             } else {
                 cascadingCut(y, y.getParent());
             }
