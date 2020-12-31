@@ -398,9 +398,37 @@ public class FibonacciHeap {
         // k is smaller then H.size()
         if (H.isEmpty() || k <= 0) return new int[0]; // nothing to do if empty
         int[] arr = new int[k];
+        /*
+        Steps to success:
+            1. Create a new Heap p
+            2. for k iteration, starting with H root:
+                i.      insert current starter level to heap p. For each inserted node, save a pointer to node in H
+                ii.     get the min pointer from p, store it at the output array.
+                iii.    Set the min's child as the new starter. If no child, we will pick from existing elements in p.
 
+         */
+        HeapNode starter = H.min;
+        FibonacciHeap hipo = new FibonacciHeap();
 
-        return arr; // should be replaced by student code
+        for (int i = 0; i < k; i++) {
+
+            if (starter != null) {
+                for (HeapNode n : starter) { // at most deg(H)
+                    HeapNode l = hipo.insert(n.getKey());
+                    l.pointer = n;
+                }
+            }
+            // get the child to be new starter.
+            starter = hipo.min.pointer.child;
+            // save the value
+            arr[i] = hipo.min.key;
+            // remove from heap
+            hipo.deleteMin(); // O(logn) so worst would be O(log(k*deg(H)))
+        }
+        // Complexity summary:
+        // O(k*(deg(H) + log(k*deg(H)))) = O(k(deg(H) + log(k))) = O(kdeg(H)) 🤩
+
+        return arr;
     }
 
     /**
@@ -472,6 +500,7 @@ public class FibonacciHeap {
         private HeapNode next;
         private HeapNode prev;
         private HeapNode parent;
+        private HeapNode pointer; // used in k min to point to heap node in another list
 
         public HeapNode(int key) {
             this.key = key;
