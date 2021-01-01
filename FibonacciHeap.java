@@ -122,7 +122,7 @@ public class FibonacciHeap {
 
     /**
      * This methods merges two  nodes, with no more side effects.
-     * Retuns a pointer to the smaller node between o1 and o2 (which isn't necessarily the smallest in list)
+     * Returns a pointer to the smaller node between o1 and o2 (which isn't necessarily the smallest in list)
      */
     private static HeapNode mergeNodes(HeapNode o1, HeapNode o2) {
         if (o1 == null && o2 == null) return null;
@@ -451,9 +451,11 @@ public class FibonacciHeap {
         if (x.getNext() == x) { // node doesn't have siblings
             y.setChild(null);
         } else {
-            y.setChild(x.getNext());
-            x.getPrev().setNext(x.getNext());
-            x.getNext().setPrev(x.getPrev());
+            if (y.child == x) {
+                y.child = x.next;
+            }
+            x.prev.next= x.next;
+            x.next.prev = x.prev;
         }
 
 
@@ -461,19 +463,13 @@ public class FibonacciHeap {
         // TODO: Might be better to just meld when we write it, but need to make sure size etc. remains same
         HeapNode first = this.first;
         HeapNode last = this.first.getPrev();
-        this.first = x; //set x as the first tree in heap
-        last.setNext(x); //set last item's 'next' to x
-        first.setPrev(x); //set previous first item's 'prev' to x
-        x.setNext(first); //set x's 'next' to previous first
-        x.setPrev(last); //set x's 'prev' to last item
+        this.first = x; // set x as the first tree in heap
+        last.setNext(x); // set last item's 'next' to x
+        first.setPrev(x); // set previous first item's 'prev' to x
+        x.setNext(first); // set x's 'next' to previous first
+        x.setPrev(last); // set x's 'prev' to last item
 
-        // Checking if x should be minimum pointer
-        // TODO: Should also consider it in meld
-        if (x.getKey() < this.min.getKey()) {
-            this.min = x;
-        }
-
-        cuts++; //static field, so no use of 'this'
+        cuts++; // static field, so no use of 'this'
     }
 
     /**
