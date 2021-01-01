@@ -364,7 +364,12 @@ public class FibonacciHeap {
      * The potential equals to the number of trees in the heap plus twice the number of marked nodes in the heap.
      */
     public int potential() {
-        return (this.size + (2 * this.marked));
+        // Count how many trees
+        int counter = 0;
+        for (HeapNode n : this.first) {
+            counter++;
+        }
+        return (counter + (2 * this.marked));
     }
 
     /**
