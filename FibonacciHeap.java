@@ -345,9 +345,8 @@ public class FibonacciHeap {
         x.key -= delta;
         if (x.getParent() != null) {
             HeapNode parent = x.getParent();
-            if (x.getKey() > parent.getKey()) //everything OK
-                return;
-            else { //x.getKey() < parent.getKey() => Should no longer be the child
+
+            if (x.key < parent.key) { // this is case when we need to cut it away
                 cascadingCut(x, parent);
             }
         }
