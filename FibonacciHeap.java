@@ -9,7 +9,7 @@ public class FibonacciHeap {
     private HeapNode min;
     private HeapNode first;
     private int size;
-    private int marked;
+    private int marked; // CHANGE ONLY FROM NODE MARK FUNCTIONS!
     private static int links;
     private static int cuts;
 
@@ -443,10 +443,9 @@ public class FibonacciHeap {
      * Cut x from its parent y
      */
     public void cut(HeapNode x, HeapNode y) {
-        // remove parent and clean key
-        x.setParent(null);
-        x.unMark();
-        this.marked--;
+        // remove parent and make sure it's unmarked
+        x.parent = null;
+        x.unmark();
         // reduce y rank
         y.decreaseRank();
         if (x.getNext() == x) { // node doesn't have siblings
@@ -485,8 +484,7 @@ public class FibonacciHeap {
         if (y.getParent() != null) {
             if (!y.isMarked()) {
                 y.setMark(true);
-                this.marked++;
-            } else {
+            } else { // in this case, y is already marked so we need to recursively call this function
                 cascadingCut(y, y.getParent());
             }
         }
@@ -554,6 +552,8 @@ public class FibonacciHeap {
         }
 
         public void setMark(boolean b) {
+            if (b && !this.mark) marked++; // should raise the mark
+            else if (!b && this.mark) marked--; // should lower the mark
             this.mark = b;
         }
 
@@ -580,7 +580,8 @@ public class FibonacciHeap {
         /**
          * Unmark a node
          */
-        public void unMark() {
+        public void unmark() {
+            if (this.mark) marked--;
             this.mark = false;
         }
 
