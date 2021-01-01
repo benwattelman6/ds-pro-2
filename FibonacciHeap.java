@@ -342,14 +342,18 @@ public class FibonacciHeap {
      * to reflect this change (for example, the cascading cuts procedure should be applied if needed).
      */
     public void decreaseKey(HeapNode x, int delta) {
-        x.setKey(x.getKey() - delta);
+        x.key -= delta;
         if (x.getParent() != null) {
             HeapNode parent = x.getParent();
             if (x.getKey() > parent.getKey()) //everything OK
                 return;
-            else { //x.getKey() < parent.getKey()
+            else { //x.getKey() < parent.getKey() => Should no longer be the child
                 cascadingCut(x, parent);
             }
+        }
+        // Checking if minimum changed
+        if (x.key < min.key) {
+            min = x;
         }
     }
 
