@@ -106,7 +106,7 @@ public class FibonacciHeap
     	
     	this.size-- ;
 
-    	this.first = consolidate(this.first);
+    	this.min = consolidate(this.first);
     	
     }
     /*
@@ -136,6 +136,8 @@ public class FibonacciHeap
     	y.setParent(x);    	
     	x.setChild(y);
     	x.setRank(x.getRank()+1);
+    	x.setNext(x);
+    	x.setPrev(x);
     	
     	links++; //static field
     	
