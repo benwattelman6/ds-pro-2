@@ -68,7 +68,6 @@ public class FibonacciHeap {
             this.min = newNode;
         } else {
             HeapNode first = this.first; //not null because heap not empty
-            this.first = newNode;
             newNode.setNext(first);
             newNode.setPrev(first.getPrev()); //could be null
             first.getPrev().setNext(newNode);
