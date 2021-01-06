@@ -120,7 +120,7 @@ public class FibonacciHeap {
     }
 
     /**
-     * This methods merges two  nodes, with no more side effects.
+     * This methods merges two nodes, with no more side effects.
      * Returns a pointer to the smaller node between o1 and o2 (which isn't necessarily the smallest in list)
      */
     private static HeapNode mergeNodes(HeapNode o1, HeapNode o2) {
@@ -204,7 +204,7 @@ public class FibonacciHeap {
         return node;
     }
 
-    /*
+    /**
      * helper function - insert root y as root x's 'next'
      * only called from 'consolidate'
      * y is the now the last root of the list
@@ -272,22 +272,16 @@ public class FibonacciHeap {
      * Meld the heap with heap2
      */
     public void meld(FibonacciHeap heap2) {
-        if (heap2.isEmpty())
+        if (heap2.isEmpty()) return;
+        if (this.isEmpty()) {
+            this.first = heap2.first;
+            this.min = heap2.min;
+            this.size = heap2.size;
             return;
-        else if (this.isEmpty()) {
-            this.first = heap2.getFirst();
-            this.min = heap2.getMin();
-            this.size = heap2.size();
-        } else { //both heaps are non-empty
-            this.size += heap2.size();
-            if (heap2.getMin().getKey() < this.min.getKey())
-                this.min = heap2.getMin();
-            HeapNode last = this.first.getPrev(); //could be 'first' if only one node in heap
-            last.setNext(heap2.getFirst());
-            heap2.getFirst().setPrev(last);
-
         }
-
+        if (heap2.min.key < this.min.key) this.min = heap2.min;
+        mergeNodes(heap2.first, this.first);
+        this.size += heap2.size;
     }
 
     /**
@@ -363,6 +357,7 @@ public class FibonacciHeap {
      * The potential equals to the number of trees in the heap plus twice the number of marked nodes in the heap.
      */
     public int potential() {
+        if (isEmpty()) return 0;
         // Count how many trees
         int counter = 0;
         for (HeapNode n : this.first) {
@@ -442,6 +437,7 @@ public class FibonacciHeap {
      * Cut x from its parent y
      */
     public void cut(HeapNode x, HeapNode y) {
+        cuts++; // static field, so no use of 'this'
         // remove parent and make sure it's unmarked
         x.parent = null;
         x.unmark();
@@ -453,7 +449,7 @@ public class FibonacciHeap {
             if (y.child == x) {
                 y.child = x.next;
             }
-            x.prev.next= x.next;
+            x.prev.next = x.next;
             x.next.prev = x.prev;
         }
 
@@ -468,7 +464,11 @@ public class FibonacciHeap {
         x.setNext(first); // set x's 'next' to previous first
         x.setPrev(last); // set x's 'prev' to last item
 
-        cuts++; // static field, so no use of 'this'
+    }
+
+    public void resetCounters() {
+        cuts = 0;
+        links = 0;
     }
 
     /**
@@ -476,11 +476,11 @@ public class FibonacciHeap {
      */
     public void cascadingCut(HeapNode x, HeapNode y) {
         cut(x, y);
-        if (y.getParent() != null) {
-            if (!y.isMarked()) {
-                y.setMark(true);
-            } else { // in this case, y is already marked so we need to recursively call this function
+        if (y.getParent() != null) { // not a root node..
+            if (y.isMarked()) { //we need to recursively call this function
                 cascadingCut(y, y.getParent());
+            } else {
+                y.setMark(true);
             }
         }
     }
@@ -579,7 +579,6 @@ public class FibonacciHeap {
             if (this.mark) marked--;
             this.mark = false;
         }
-
 
         public void decreaseRank() {
             this.rank--;
