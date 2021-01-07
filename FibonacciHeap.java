@@ -11,6 +11,7 @@ public class FibonacciHeap {
     private HeapNode first;
     private int size;
     private int marked; // CHANGE ONLY FROM NODE MARK FUNCTIONS!
+    private int numOfTrees;
     private static int links;
     private static int cuts;
 
@@ -26,6 +27,7 @@ public class FibonacciHeap {
         this.first = null;
         this.size = 0;
         this.marked = 0;
+        this.numOfTrees = 0;
     }
 
     /**
@@ -100,7 +102,8 @@ public class FibonacciHeap {
             if (key < this.min.getKey())
                 this.min = newNode;
         }
-
+        
+        this.numOfTrees++;
         this.size++;
 
         return newNode;
@@ -140,7 +143,10 @@ public class FibonacciHeap {
         // now we want to merge the children (if any) to the existing list;
         // if x was the only root, min is null. if no children, x.child is null
         HeapNode starter = mergeNodes(x.child, this.min);
-        if (starter == null) return; // no elements so we are done.
+        if (starter == null) {
+        	this.numOfTrees = 0;
+        	return; // no elements so we are done.
+        }
         // otherwise, we have to consolidate
         this.min = consolidate(starter);
     }
@@ -203,6 +209,8 @@ public class FibonacciHeap {
         newParent.child = newChild; // also covers the case when no children at first
         links++; // static field
         newParent.rank++;
+        
+        this.numOfTrees--;
         return newParent;
     }
 
@@ -215,8 +223,11 @@ public class FibonacciHeap {
     public HeapNode consolidate(HeapNode x) {
         HeapNode[] fullBuckets = toBuckets(x);
         HeapNode node = null;
+        this.numOfTrees = 0; //reset number of trees
+        
         for (int i = 0; i < fullBuckets.length; i++) {
             if (fullBuckets[i] != null) { //there's a Binomial tree with rank i
+            	this.numOfTrees++;
                 if (node == null) { //reached the first Binomial tree in list
                     node = fullBuckets[i];
                     node.next = node;
@@ -321,11 +332,21 @@ public class FibonacciHeap {
             this.first = heap2.first;
             this.min = heap2.min;
             this.size = heap2.size;
+            this.numOfTrees = heap2.numOfTrees;
             return;
         }
+        //both heaps non-empty
         if (heap2.min.key < this.min.key) this.min = heap2.min;
-        mergeNodes(heap2.first, this.first);
+        //mergeNodes(heap2.first, this.first);
+        HeapNode thisLast = this.first.prev;
+        this.first.prev = heap2.first.prev;
+        thisLast.next = heap2.first;
+        heap2.first.prev.next = this.first;
+        heap2.first.prev = thisLast;
+        
+        
         this.size += heap2.size;
+        this.numOfTrees += heap2.numOfTrees;
     }
 
     /**
@@ -398,17 +419,20 @@ public class FibonacciHeap {
      * This function returns the current potential of the heap, which is:
      * Potential = #trees + 2*#marked
      * The potential equals to the number of trees in the heap plus twice the number of marked nodes in the heap.
-     * Complexity: worst case O(n), amortized O(logn)
+     * Uses "numOfTrees" and "marked" fields for an easy computation.
+     * Complexity: O(1)
      */
     public int potential() {
         if (isEmpty()) return 0;
-        // Count how many trees
-        int counter = 0;
-        for (HeapNode n : this.first) { //use iterator
-            counter++;
-        }
-        return (counter + (2 * this.marked));
+//        // Count how many trees
+//        int counter = 0;
+//        for (HeapNode n : this.first) { //use iterator
+//            counter++;
+//        }
+//        return (counter + (2 * this.marked));
+    	return (this.numOfTrees + (2*this.marked));
     }
+    
 
 
 
@@ -448,11 +472,11 @@ public class FibonacciHeap {
         int[] arr = new int[k];
         /*
         Steps to success:
-            1. Create a new Heap p
+            1. Create a new Heap hipo
             2. for k iteration, starting with H root:
-                i.      insert current starter level to heap p. For each inserted node, save a pointer to node in H
-                ii.     get the min pointer from p, store it at the output array.
-                iii.    Set the min's child as the new starter. If no child, we will pick from existing elements in p.
+                i.      insert current starter level to heap hipo. For each inserted node, save a pointer to node in H
+                ii.     get the min pointer from hipo, store it at the output array.
+                iii.    Set the min's child as the new starter. If no child, we will pick from existing elements in hipo.
 
          */
         HeapNode starter = H.min;
@@ -511,6 +535,9 @@ public class FibonacciHeap {
         first.setPrev(x); // set previous first item's 'prev' to x
         x.setNext(first); // set x's 'next' to previous first
         x.setPrev(last); // set x's 'prev' to last item
+        
+        //increment number of trees in heap
+        this.numOfTrees++;
 
     }
 
@@ -526,8 +553,8 @@ public class FibonacciHeap {
      */
     public void cascadingCut(HeapNode x, HeapNode y) {
         cut(x, y);
-        if (y.getParent() != null) { // not a root node..
-            if (y.isMarked()) { //we need to recursively call this function
+        if (y.getParent() != null) { // not a root node
+            if (y.isMarked()) { //recursively call this function
                 cascadingCut(y, y.getParent());
             } else {
                 y.setMark(true);
