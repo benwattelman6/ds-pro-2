@@ -94,15 +94,16 @@ public class FibonacciHeap {
             this.first = newNode;
             this.min = newNode;
         } else {
-            HeapNode first = this.first; //not null because heap not empty
+            HeapNode first = this.first; // not null because heap not empty
             newNode.setNext(first);
-            newNode.setPrev(first.getPrev()); //could be null
+            newNode.setPrev(first.getPrev());
             first.getPrev().setNext(newNode);
             first.setPrev(newNode);
+            this.first = newNode; // set the new node to be the first
             if (key < this.min.getKey())
                 this.min = newNode;
         }
-        
+
         this.numOfTrees++;
         this.size++;
 
@@ -131,7 +132,7 @@ public class FibonacciHeap {
         } else { // 2nd case
             this.min.prev.next = this.min.next;
             this.min.next.prev = this.min.prev;
-            this.min = min.next;
+            this.min = min.next;  // we set it to be min. This will allow our node to take the place of the deleted min
         }
 
         if (x.child != null) {
@@ -162,11 +163,12 @@ public class FibonacciHeap {
         if (o1 == null) return o2; // then o2 is not null
         if (o2 == null) return o1; // then o1 is not null
         // then both o1,o2 not null
-        HeapNode tmp = o1.next;
-        o1.next = o2.next;
-        o1.next.prev = o1;
-        o2.next = tmp;
-        o2.next.prev = o2;
+        HeapNode lastA = o1.prev;
+        HeapNode lastB = o2.prev;
+        o1.prev = lastB;
+        lastB.next = o1;
+        lastA.next = o2;
+        o2.prev = lastA;
         return o1.getKey() < o2.getKey() ? o1 : o2;
 
     }
@@ -209,7 +211,7 @@ public class FibonacciHeap {
         newParent.child = newChild; // also covers the case when no children at first
         links++; // static field
         newParent.rank++;
-        
+
         this.numOfTrees--;
         return newParent;
     }
@@ -224,7 +226,7 @@ public class FibonacciHeap {
         HeapNode[] fullBuckets = toBuckets(x);
         HeapNode node = null;
         this.numOfTrees = 0; //reset number of trees
-        
+
         for (int i = 0; i < fullBuckets.length; i++) {
             if (fullBuckets[i] != null) { //there's a Binomial tree with rank i
             	this.numOfTrees++;
@@ -343,8 +345,8 @@ public class FibonacciHeap {
         thisLast.next = heap2.first;
         heap2.first.prev.next = this.first;
         heap2.first.prev = thisLast;
-        
-        
+
+
         this.size += heap2.size;
         this.numOfTrees += heap2.numOfTrees;
     }
@@ -535,7 +537,7 @@ public class FibonacciHeap {
         first.setPrev(x); // set previous first item's 'prev' to x
         x.setNext(first); // set x's 'next' to previous first
         x.setPrev(last); // set x's 'prev' to last item
-        
+
         //increment number of trees in heap
         this.numOfTrees++;
 
